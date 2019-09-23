@@ -1,0 +1,56 @@
+---
+- name: Create a EC2 instance
+  hosts: server1
+  gather_facts: False
+  vars_files:
+	 - var/key.yml
+
+  vars:
+      region: us-east-1
+      instance_type: t2.micro
+      ami: ami-0b69ea66ff7391e80
+      keypair: "{{ mykey }}" # pem file name
+  
+  tasks:
+
+    - name: Creating an EC2 instance
+      ec2:
+         key_name: "{{ keypair }}"
+         group: default  # security group name
+         instance_type: "{{ instance_type}}"
+         image: "{{ ami }}"
+         wait: true
+         region: "{{ region }}"
+         count: 1  # default
+        register: ec2
+
+
+- hosts: server1
+  sudo: yes
+  tasks:
+    - name: install php
+      apt: name=php7* update_cache=yes state=present
+
+
+  tasks:
+    - name: install apache2
+      apt: name=apache2 update_cache=yes state=present
+
+
+handlers:
+    - name: start apache2
+       sudo: true
+	sudo_user: test1
+      service: name=apache2 state=start
+
+handlers:
+    - name: stop apache2
+      sudo: true
+	sudo_user: test1
+      service: name=apache2 state=stop
+
+handlers:
+    - name: restart apache2
+      sudo: true
+	sudo_user: test1
+      service: name=apache2 state=restarted
